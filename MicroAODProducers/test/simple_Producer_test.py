@@ -1,35 +1,24 @@
 import FWCore.ParameterSet.Config as cms
 import FWCore.Utilities.FileUtils as FileUtils
 
-process = cms.Process("FLASHggTEST")
+process = cms.Process("FLASHggMicroAOD")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
-#process.load("Geometry.CaloEventSetup.CaloTopology_cfi")
-#process.load("Geometry.CMSCommonData.cmsIdealGeometryXML_cfi")
-#process.load("Geometry.CaloEventSetup.CaloGeometry_cfi")
-#process.load("CalibCalorimetry.EcalLaserCorrection.ecalLaserCorrectionService_cfi")
-#process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
-
 
 process.load("Configuration.StandardSequences.GeometryDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 process.GlobalTag.globaltag = 'POSTLS170_V5::All'
-#process.GlobalTag.toGet = cms.VPSet(
-#    cms.PSet(record = cms.string("EcalIntercalibConstantsRcd"),
-#             tag = cms.string("EcalIntercalibConstants_Bon_V20101105"),
-#             connect = cms.untracked.string("frontier://FrontierProd/CMS_COND_31X_ECAL")
-#             )
-#    )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( 50 ) )
+process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32( 100 )
 
-process.source = cms.Source("PoolSource",fileNames=cms.untracked.vstring("file:/afs/cern.ch/work/s/sethzenz/public/Hgg_miniAOD_run0/miniAOD_3.root"))
+process.source = cms.Source("PoolSource",fileNames=cms.untracked.vstring("/store/cmst3/user/gpetrucc/miniAOD/v1/GluGluToHToGG_M-125_13TeV-powheg-pythia6_Flat20to50_PAT.root"))
 
-# Each track associated only to the closest vertex (or none if dZ >= MaxAllowedDz for all vertices)
 process.flashggVertexMapUnique = cms.EDProducer('FlashggDzVertexMapProducer',
                                                 PFCandidatesTag=cms.untracked.InputTag('packedPFCandidates'),
                                                 VertexTag=cms.untracked.InputTag('offlineSlimmedPrimaryVertices'),
+                                                BeamSpotTag=cms.untracked.InputTag('offlineBeamSpot'),
                                                 MaxAllowedDz=cms.double(0.2) # in cm
                                                 )
 
@@ -41,35 +30,36 @@ process.flashggVertexMapNonUnique = cms.EDProducer('FlashggDzVertexMapProducer',
                                                    UseEachTrackOnce=cms.untracked.bool(False)
                                                    )
 
-process.flashggPhotons = cms.EDProducer('FlashggPhotonProducer',
-                                        PhotonTag=cms.untracked.InputTag('slimmedPhotons'),
-                                        PFCandidatesTag=cms.untracked.InputTag('packedPFCandidates'), # Needed to compute ChargedPFIso for Run1 Legacy preselection
-                                        PhotonPreselectorName=cms.string("FlashggNoPhotonPreselector"),
-#                                        PhotonPreselectorName=cms.string("FlashggLegacyPhotonPreselector"),
-                                        reducedBarrelRecHitCollection=cms.InputTag('reducedEgamma','reducedEBRecHits'),
-                                        reducedEndcapRecHitCollection=cms.InputTag('reducedEgamma','reducedEERecHits'),
-                                        reducedPreshowerRecHitCollection=cms.InputTag('reducedEgamma','reducedESRecHits')
-                                        )
+process.load("flashgg/MicroAODProducers/flashggPhotons_cfi")
+process.load("flashgg/MicroAODProducers/flashggDiPhotons_cfi")
+process.load("flashgg/MicroAODProducers/flashggPreselectedDiPhotons_cfi")
+                                                 
+# This requires you to have done: git cms-merge-topic -u sethzenz:pileupjetid-for-flashgg
+process.load("RecoJets.JetProducers.PileupJetIDParams_cfi")
 
-process.flashggDiPhotons = cms.EDProducer('FlashggDiPhotonProducer',
-                                          PhotonTag=cms.untracked.InputTag('flashggPhotons'),
-                                          VertexTag=cms.untracked.InputTag('offlineSlimmedPrimaryVertices'),
-#                                         VertexSelectorName=cms.string("FlashggZerothVertexSelector"),
-                                          VertexSelectorName=cms.string("FlashggLegacyVertexSelector"),
-                                          VertexCandidateMapTag=cms.InputTag("flashggVertexMapUnique")  
-#                                          VertexCandidateMapTag=cms.InputTag("flashggVertexMapNonUnique")
-                                          )
+process.flashggJets = cms.EDProducer('FlashggJetProducer',
+                                     DiPhotonTag=cms.untracked.InputTag('flashggDiPhotons'),
+                                     VertexTag=cms.untracked.InputTag('offlineSlimmedPrimaryVertices'),
+                                     JetTag=cms.untracked.InputTag('slimmedJets'),
+                                     VertexCandidateMapTag = cms.InputTag("flashggVertexMapUnique"),
+                                     PileupJetIdParameters=cms.PSet(process.full_53x) # from PileupJetIDParams_cfi
+                                     )
 
 process.out = cms.OutputModule("PoolOutputModule", fileName = cms.untracked.string('myOutputFile.root'),
                                outputCommands = cms.untracked.vstring("drop *",
                                                                       "keep *_flashgg*_*_*",
                                                                       "drop *_flashggVertexMap*_*_*",
-                                                                      "keep *_offlineSlimmedPrimaryVertices_*_*")
+                                                                      "keep *_offlineSlimmedPrimaryVertices_*_*",
+                                                                      "keep *_reducedEgamma_reduced*Clusters_*",
+                                                                      "keep *_reducedEgamma_*PhotonCores_*"
+                                                                     )
 )
-
 process.p = cms.Path(process.flashggVertexMapUnique*
                      process.flashggVertexMapNonUnique*
                      process.flashggPhotons*
-                     process.flashggDiPhotons)
+                     process.flashggDiPhotons*
+                     process.flashggPreselectedDiPhotons*
+                     process.flashggJets
+                    )
 
 process.e = cms.EndPath(process.out)

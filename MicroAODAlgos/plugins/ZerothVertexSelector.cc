@@ -3,6 +3,7 @@
 #include "flashgg/MicroAODFormats/interface/Photon.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/Common/interface/PtrVector.h"
+#include "DataFormats/EgammaCandidates/interface/Conversion.h"
 
 namespace flashgg {
   
@@ -12,8 +13,12 @@ namespace flashgg {
       VertexSelectorBase(conf),
       _whichVertex(conf.getUntrackedParameter<unsigned int>("whichVertex",0)) {}
 
-    edm::Ptr<reco::Vertex> select(const edm::Ptr<flashgg::Photon>&,const edm::Ptr<flashgg::Photon>&,const edm::PtrVector<reco::Vertex>&,
-				  const VertexCandidateMap& ) const override;
+    edm::Ptr<reco::Vertex> select(const edm::Ptr<flashgg::Photon>&,const edm::Ptr<flashgg::Photon>&,
+				  const edm::PtrVector<reco::Vertex>&,
+				  const VertexCandidateMap&,
+				  const edm::PtrVector<reco::Conversion>&,
+				  const math::XYZPoint&) const override;
+
 
   private:
     unsigned int _whichVertex; // set this variable to something non-zero to make this stupid selector both stupider and poorly-named
@@ -21,8 +26,12 @@ namespace flashgg {
   };
 
   
-  edm::Ptr<reco::Vertex> ZerothVertexSelector::select(const edm::Ptr<flashgg::Photon>& g1,const edm::Ptr<flashgg::Photon>& g2,const edm::PtrVector<reco::Vertex>& vtxs,
-						      const VertexCandidateMap& vertexCandidateMap) const {
+  edm::Ptr<reco::Vertex> ZerothVertexSelector::select(const edm::Ptr<flashgg::Photon>& g1,
+						      const edm::Ptr<flashgg::Photon>& g2,
+						      const edm::PtrVector<reco::Vertex>& vtxs,
+						      const VertexCandidateMap& vertexCandidateMap,
+						      const edm::PtrVector<reco::Conversion>& convs,
+						      const math::XYZPoint& beamSpot) const {
     return vtxs[_whichVertex];
   }
 

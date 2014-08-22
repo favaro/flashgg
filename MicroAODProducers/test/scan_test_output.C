@@ -21,7 +21,7 @@
   
   TFile f("myOutputFile.root");
   TTree *Events = f.Get("Events");
-  Events->Print();
+//  Events->Print();
   Events->SetScanField(0);
   Events->Scan("flashggDiPhotonCandidates_flashggDiPhotons__FLASHggTEST.obj.pt_:flashggPhotons_flashggPhotons__FLASHggTEST.obj.zernike42:flashggPhotons_flashggPhotons__FLASHggTEST.obj.hcalTowersBehindClusters[0]");
 
@@ -46,6 +46,7 @@
     objs_pho.getByLabel(ev,"flashggPhotons");
     objs_dipho.getByLabel(ev,"flashggDiPhotons");
     objs_vertex.getByLabel(ev,"offlineSlimmedPrimaryVertices"); 
+//    objs_packcand.getByLabel(ev,"")
     std::cout  << "------------------------------------------------------------------------" << std::endl;   
     // now can access data
     for (int i=0; i< objs_pho->size() ;i++ ){
@@ -53,6 +54,7 @@
     std::cout << "pt" <<   "   " << pho[i].pt() << std::endl;
     std::cout << "eta" <<  "   " << pho[i].eta() << std::endl;
     std::cout << "phi" <<  "   " << pho[i].phi() << std::endl;
+    std::cout << "r9 " << "   " << pho[i].r9() << std::endl;
 //    std::cout << "e1x5" << "   " << pho[i].e1x5() << std::endl;
 //    std::cout << "e2x5" << "   " << pho[i].e2x5() << std::endl;
 //    std::cout << "e5x5" << "   " << pho[i].e5x5() << std::endl;
@@ -93,9 +95,9 @@
     for (int i=0; i < objs_vertex.ptr()->size();i++ ){
     std::vector<reco::Vertex> const & vertex = *objs_vertex;
 //    std::cout << "chi2" <<   "   " << vertex[i].chi2() << std::endl;
-    std::cout << "x" <<   "   " << vertex[i].x() << std::endl;
-    std::cout << "y" <<   "   " << vertex[i].y() << std::endl;
-    std::cout << "z" <<   "   " << vertex[i].z() << std::endl;
+//    std::cout << "x" <<   "   " << vertex[i].x() << std::endl;
+//    std::cout << "y" <<   "   " << vertex[i].y() << std::endl;
+//    std::cout << "z" <<   "   " << vertex[i].z() << std::endl;
 //    std::cout << "xerror" << "   " <<  vertex[i].xError() << std::endl;
 //    std::cout << "yerror" << "   " <<  vertex[i].yError() << std::endl;
 //    std::cout << "zerror" << "   " <<  vertex[i].zError() << std::endl;
