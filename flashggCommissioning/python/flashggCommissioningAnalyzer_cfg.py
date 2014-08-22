@@ -14,7 +14,7 @@ process.GlobalTag.globaltag = 'POSTLS170_V5::All'
 
 #**************************************************************
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(500) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(3000) )
 
 inputlist = FileUtils.loadListFromFile('fileList_ggToH_125_13TeV.txt')
 readFiles = cms.untracked.vstring( *inputlist)
