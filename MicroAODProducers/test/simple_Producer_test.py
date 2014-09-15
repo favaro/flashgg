@@ -10,7 +10,7 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 process.GlobalTag.globaltag = 'POSTLS170_V5::All'
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( 50 ) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( -1 ) )
 process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32( 100 )
 
 process.source = cms.Source("PoolSource",fileNames=cms.untracked.vstring("/store/cmst3/user/gpetrucc/miniAOD/v1/GluGluToHToGG_M-125_13TeV-powheg-pythia6_Flat20to50_PAT.root"))
@@ -53,13 +53,25 @@ process.out = cms.OutputModule("PoolOutputModule", fileName = cms.untracked.stri
                                                                       "keep *_reducedEgamma_reduced*Clusters_*",
                                                                       "keep *_reducedEgamma_*PhotonCores_*"
                                                                      )
+                               )
+
+process.commissioning = cms.EDAnalyzer('flashggCommissioning',
+                                       PhotonTag=cms.untracked.InputTag('flashggPhotons'),
+                                       DiPhotonTag = cms.untracked.InputTag('flashggDiPhotons'),
+                                       VertexTag=cms.untracked.InputTag('offlineSlimmedPrimaryVertices')
 )
+
+process.TFileService = cms.Service("TFileService",
+                                   fileName = cms.string("tree.root")
+)
+
 process.p = cms.Path(process.flashggVertexMapUnique*
                      process.flashggVertexMapNonUnique*
                      process.flashggPhotons*
                      process.flashggDiPhotons*
                      process.flashggPreselectedDiPhotons*
-                     process.flashggJets
+                     process.flashggJets*
+                     process.commissioning
                     )
 
 process.e = cms.EndPath(process.out)
